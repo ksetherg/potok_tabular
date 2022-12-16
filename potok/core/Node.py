@@ -67,7 +67,7 @@ class Node(Serializable):
         return y_frwd
 
     @property
-    def copy(self) -> Node:
+    def copy(self) -> "Node":
         return copy.copy(self)
 
     def __str__(self) -> str:
