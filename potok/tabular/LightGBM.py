@@ -10,17 +10,16 @@ from potok.tabular.TabularData import TabularData
 
 
 class LightGBM(Regressor):
-    def __init__(self,
-                 target=None,
-                 features=None,
-                 cat_features=None,
-                 mode='Regressor',
-                 objective='mse',
-                 num_class=None,
-                 weight=None,
-                 **kwargs,
-                 ):
-
+    def __init__(
+        self,
+        target=None,
+        features=None,
+        cat_features=None,
+        mode='Regressor',
+        model_params=dict(),
+        weight=None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.target = target
         self.features = features
@@ -28,23 +27,7 @@ class LightGBM(Regressor):
         self.mode = mode
         self.weight = weight
 
-        self.model_params = dict(
-            n_estimators=2000,
-            learning_rate=0.03,
-            num_class=num_class,
-            objective=objective,
-            # max_depth=HrPrmOptChoise(8, list(range(2, 12))),
-            # num_leaves=HrPrmOptChoise(31, list(range(8, 56))),
-            # log10_min_child_weight=HrPrmOptRange(0, -3.0, 3.0),
-            # min_split_gain=HrPrmOptRange(0.5, 0.0, 1.0),
-            # subsample=HrPrmOptRange(0.8, 0.5, 1.0),
-            # colsample_bytree=HrPrmOptRange(0.8, 0.5, 1.0),
-            # reg_alpha=HrPrmOptRange(1.0, 0.0, 3.0),
-            # reg_lambda=HrPrmOptRange(0.0, 0.0, 3.0),
-            # class_weight='balanced',
-            importance_type='gain',
-            n_jobs=-1,
-        )
+        self.model_params = model_params
         self.early_stopping_rounds = 100
 
         self.model = None

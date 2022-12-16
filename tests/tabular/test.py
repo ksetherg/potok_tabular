@@ -31,7 +31,6 @@ def test_lightgbm_classification() -> DataDict:
     x = DataDict(data_1=x)
     y = DataDict(data_1=y)
     folder = StratifiedFolder(n_folds=3, seed=2424)
-
     validation = Validation(folder)
     algo = LightGBM(target=['Target'], mode='Classifier', objective='binary', features=['X'])
     model = Pipeline([validation, algo], shapes=[1, 3])
