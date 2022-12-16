@@ -1,7 +1,7 @@
 from typing import List, Iterator, Tuple
 
 from potok.core import DataDict, Pipeline
-from potok.tabular import Folder, LightGBM, TransformY, LinReg, SyntheticData
+from potok.tabular import Folder, LightGBM, TransformY, LinReg, SyntheticData, StratifiedFolder
 from potok.methods import Validation, Bagging
 
 
@@ -30,9 +30,10 @@ def test_lightgbm_classification() -> DataDict:
     x, y = generate_regression_data(problem='classification')
     x = DataDict(data_1=x)
     y = DataDict(data_1=y)
-    folder = Folder(n_folds=3, seed=2424)
+    folder = StratifiedFolder(n_folds=3, seed=2424)
+
     validation = Validation(folder)
-    algo = LightGBM(target=['Target'], mode='Classifier', features=['X'])
+    algo = LightGBM(target=['Target'], mode='Classifier', objective='binary', features=['X'])
     model = Pipeline([validation, algo], shapes=[1, 3])
     prediction = model.fit_predict(x, y)
     return prediction

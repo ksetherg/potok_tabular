@@ -1,4 +1,4 @@
-from potok.tabular.Folder import Folder, FolderByTime
+from potok.tabular.Folder import Folder, FolderByTime, StratifiedFolder
 from potok.tabular.TabularData import TabularData
 from potok.tabular.LightGBM import LightGBM
 from potok.tabular.LinReg import LinReg

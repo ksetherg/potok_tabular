@@ -1,4 +1,4 @@
-from sklearn.model_selection import KFold, train_test_split, TimeSeriesSplit
+from sklearn.model_selection import KFold, TimeSeriesSplit, StratifiedKFold, train_test_split
 import pandas as pd
 import numpy as np
 
@@ -6,12 +6,14 @@ from potok.core import Operator, DataDict
 
 
 class Folder(Operator):
-    def __init__(self,
-                 n_folds: int = 5,
-                 split_ratio: float = 0.2,
-                 index_name: str = None,
-                 seed: int = 4242,
-                 **kwargs) -> None:
+    def __init__(
+        self,
+        n_folds: int = 5,
+        split_ratio: float = 0.2,
+        index_name: str = None,
+        seed: int = 4242,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self.n_folds = n_folds
         self.split_ratio = split_ratio
@@ -85,12 +87,14 @@ class Folder(Operator):
 
 
 class FolderByTime(Folder):
-    def __init__(self,
-                 n_folds: int = 5,
-                 split_ratio: float = 0.2,
-                 index_name: str = None,
-                 seed: int = 4242,
-                 **kwargs):
+    def __init__(
+        self,
+        n_folds: int = 5,
+        split_ratio: float = 0.2,
+        index_name: str = None,
+        seed: int = 4242,
+        **kwargs
+    ):
         super().__init__(n_folds, split_ratio, index_name, seed, **kwargs)
 
     def generate_folds_by_index(self, x: DataDict, y: DataDict) -> DataDict:
@@ -106,3 +110,45 @@ class FolderByTime(Folder):
 
         return folds
 
+
+class StratifiedFolder(Folder):
+    def __init__(
+        self,
+        n_folds: int = 5,
+        split_ratio: float = 0.2,
+        index_name: str = None,
+        seed: int = 4242,
+        **kwargs
+    ):
+        super().__init__(n_folds=n_folds, split_ratio=split_ratio, index_name=index_name, seed=seed, **kwargs)
+
+    def generate_folds_by_index(self, x: DataDict, y: DataDict) -> DataDict:
+        index = x['train'].index
+        values = x['train'].index.get_level_values(self.index_name).unique().to_numpy()
+        strats = y['train'].Y.data
+        if self.n_folds > 1:
+            folder = StratifiedKFold(n_splits=self.n_folds, shuffle=True, random_state=self.seed)
+
+            folds = DataDict(**{f'Fold_{i+1}':
+                                DataDict(
+                                    train=index[index.get_level_values(self.index_name).isin(values[train_idx])],
+                                    valid=index[index.get_level_values(self.index_name).isin(values[valid_idx])])
+                                for i, (train_idx, valid_idx) in enumerate(folder.split(values, strats))})
+        else:
+            train_idx, valid_idx = train_test_split(values, test_size=self.split_ratio, random_state=self.seed, stratify=strats)
+            folds = DataDict(**{'Fold_1':
+                         DataDict(train=index[index.get_level_values(self.index_name).isin(values[train_idx])],
+                                  valid=index[index.get_level_values(self.index_name).isin(values[valid_idx])])})
+        return folds
+
+    def generate_folds(self, x: DataDict, y: DataDict) -> dict:
+        index = x['train'].index
+        strats = y['train'].Y.data
+        if self.n_folds > 1:
+            folder = StratifiedKFold(n_splits=self.n_folds, shuffle=True, random_state=self.seed)
+            folds = DataDict(**{f'Fold_{i + 1}': DataDict(train=index[train_idx], valid=index[valid_idx])
+                                for i, (train_idx, valid_idx) in enumerate(folder.split(index, strats))})
+        else:
+            train_idx, valid_idx = train_test_split(index, test_size=self.split_ratio, random_state=self.seed)
+            folds = {'Fold_1': DataDict(train=index[train_idx], valid=index[valid_idx])}
+        return folds
