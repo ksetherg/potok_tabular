@@ -4,7 +4,7 @@ from pathlib import Path
 import joblib
 # from typing import List, Iterator, Tuple
 
-from potok.core import Regressor, ApplyToDataDict, DataDict
+from potok.core import Regressor, ApplyToDataDict
 from potok.tabular.TabularData import TabularData
 # from potok.tabular.HyperOptimization import HrPrmOptRange, HrPrmOptChoise
 
@@ -16,7 +16,6 @@ class LightGBM(Regressor):
                  cat_features=None,
                  mode='Regressor',
                  objective='mse',
-                 eval_metric='mse',
                  num_class=None,
                  weight=None,
                  **kwargs,
@@ -46,12 +45,7 @@ class LightGBM(Regressor):
             importance_type='gain',
             n_jobs=-1,
         )
-
-        self.training_params = dict(
-            eval_metric=eval_metric,
-            early_stopping_rounds=50,
-            verbose=100,
-        )
+        self.early_stopping_rounds = 100
 
         self.model = None
         self.cat_features_idx = None
@@ -85,7 +79,7 @@ class LightGBM(Regressor):
         params = self.model_params
         self.model.set_params(**params)
 
-    def _fit_(self, x: DataDict, y: DataDict) -> None:
+    def _fit_(self, x: TabularData, y: TabularData) -> None:
         self._set_model_()
 
         if self.target is None:
@@ -116,16 +110,20 @@ class LightGBM(Regressor):
         print(f'X_train = {x_train.shape} y_train = {y_train.shape}')
         print(f'X_valid = {x_valid.shape} y_valid = {y_valid.shape}')
 
-        self.model = self.model.fit(X=x_train, y=y_train, sample_weight=w_train,
-                                    eval_set=[(x_valid, y_valid)], eval_sample_weight=[w_valid],
-                                    categorical_feature=self.cat_features_idx,
-                                    **self.training_params)
+        self.model = self.model.fit(
+            X=x_train, y=y_train,
+            sample_weight=w_train,
+            eval_set=[(x_valid, y_valid)],
+            eval_sample_weight=[w_valid],
+            categorical_feature=self.cat_features_idx,
+            callbacks=[lgb.early_stopping(stopping_rounds=self.early_stopping_rounds)]
+        )
 
         self._make_feature_importance_df_()
         return None
 
     @ApplyToDataDict(mode='efficient')
-    def _predict_(self, x: DataDict) -> DataDict:
+    def _predict_(self, x: TabularData) -> TabularData:
         assert self.model is not None, 'Fit model before or load from file.'
         x_new = x.data[self.features]
         if self.mode == 'Classifier':
