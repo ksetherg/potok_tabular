@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from typing import Tuple, Union
+from typing import Tuple, Union, List
 from category_encoders.target_encoder import TargetEncoder
 from category_encoders.cat_boost import CatBoostEncoder
 
@@ -167,9 +167,12 @@ class CreateFeatureSpace(Operator):
 
 
 class EncodeX(Operator):
-    def __init__(self, features_to_encode: list,
-                 categorizer_name: str = None,
-                 **kwargs):
+    def __init__(
+        self,
+        features_to_encode: List[str],
+        categorizer_name: str,
+        **kwargs
+    ):
         super().__init__(**kwargs)
 
         self.features_to_encode = features_to_encode
