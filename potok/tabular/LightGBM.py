@@ -6,7 +6,7 @@ import joblib
 
 from potok.core import Regressor, ApplyToDataDict, DataDict
 from potok.tabular.TabularData import TabularData
-from potok.tabular.HyperOptimization import HrPrmOptRange, HrPrmOptChoise
+# from potok.tabular.HyperOptimization import HrPrmOptRange, HrPrmOptChoise
 
 
 class LightGBM(Regressor):
@@ -38,8 +38,8 @@ class LightGBM(Regressor):
             # num_leaves=HrPrmOptChoise(31, list(range(8, 56))),
             # log10_min_child_weight=HrPrmOptRange(0, -3.0, 3.0),
             # min_split_gain=HrPrmOptRange(0.5, 0.0, 1.0),
-            subsample=HrPrmOptRange(0.8, 0.5, 1.0),
-            colsample_bytree=HrPrmOptRange(0.8, 0.5, 1.0),
+            # subsample=HrPrmOptRange(0.8, 0.5, 1.0),
+            # colsample_bytree=HrPrmOptRange(0.8, 0.5, 1.0),
             # reg_alpha=HrPrmOptRange(1.0, 0.0, 3.0),
             # reg_lambda=HrPrmOptRange(0.0, 0.0, 3.0),
             # class_weight='balanced',
@@ -81,7 +81,8 @@ class LightGBM(Regressor):
             self.model = lgb.LGBMClassifier()
         else:
             raise Exception('Unknown mode %s' % self.mode)
-        params = {k: (x.value if isinstance(x, (HrPrmOptRange, HrPrmOptChoise)) else x) for k, x in self.model_params.items()}
+        # params = {k: (x.value if isinstance(x, (HrPrmOptRange, HrPrmOptChoise)) else x) for k, x in self.model_params.items()}
+        params = self.model_params
         self.model.set_params(**params)
 
     def _fit_(self, x: DataDict, y: DataDict) -> None:

@@ -18,28 +18,28 @@ class Data:
     #     return self.__class__, copy.copy(tuple(self.__dict__.values()))
         
     @property
-    def X(self) -> Data:
+    def X(self) -> "Data":
         raise Exception('Not implemented.')
 
     @property
-    def Y(self) -> Data:
+    def Y(self) -> "Data":
         raise Exception('Not implemented.')
 
     @property
     def index(self):
         raise Exception('Not implemented.')
 
-    def get_by_index(self, index) -> Data:
+    def get_by_index(self, index) -> "Data":
         raise Exception('Not implemented')
 
-    def reindex(self, index) -> Data:
+    def reindex(self, index) -> "Data":
         raise Exception('Not implemented')
 
     @staticmethod
-    def combine(datas: List[Data]) -> Data:
+    def combine(datas: List["Data"]) -> "Data":
         raise Exception('Not implemented')
     
-    def copy(self, **kwargs) -> Data:
+    def copy(self, **kwargs) -> "Data":
         new_data = copy.copy(self)
         new_data.__dict__.update(kwargs)
         return new_data
@@ -93,32 +93,32 @@ class DataDict(Data):
         return iter(self.__dict__.copy().items())
 
     @property
-    def X(self) -> DataDict:
+    def X(self) -> "DataDict":
         X = {k: v.X for k, v in self.items()}
         return DataDict(**X)
 
     @property
-    def Y(self) -> DataDict:
+    def Y(self) -> "DataDict":
         Y = {k: v.Y for k, v in self.items()}
         return DataDict(**Y)
 
     @property
-    def index(self) -> DataDict:
+    def index(self) -> "DataDict":
         indx = {k: v.index for k, v in self.items()}
         return DataDict(**indx)
 
-    def get_by_index(self, index: DataDict) -> DataDict:
+    def get_by_index(self, index: "DataDict") -> "DataDict":
         assert self.keys() == index.keys(), 'Units must match.'
         res = {k1: v1.get_by_index(v2) for (k1, v1), (k2, v2) in zip(self.items(), index.items())}
         return DataDict(**res)
 
-    def reindex(self, index: DataDict) -> DataDict:
+    def reindex(self, index: "DataDict") -> "DataDict":
         assert self.keys() == index.keys(), 'Units must match.'
         res = {k1: v1.reindex(v2) for (k1, v1), (k2, v2) in zip(self.items(), index.items())}
         return DataDict(**res)
 
     @staticmethod
-    def combine(data: List[DataDict]) -> DataDict:
+    def combine(data: List["DataDict"]) -> "DataDict":
         # можно сделать просто как метод класса, потому что все равно комбайним поля класса
         if all([hasattr(v, 'keys') for v in data]):
             units_list = [v.keys() for v in data]
