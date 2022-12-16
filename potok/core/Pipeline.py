@@ -11,7 +11,7 @@ from typing import List, Tuple, Dict
 
 class Pipeline(Node):
     """Pipeline works with DataLayer and Layer"""
-    def __init__(self, *nodes: List[Node], **kwargs: Dict):
+    def __init__(self, nodes: List[Node], **kwargs: Dict):
         super().__init__(**kwargs)
         _nodes_ = []
         for node in nodes:
