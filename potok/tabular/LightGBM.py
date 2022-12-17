@@ -2,11 +2,10 @@ import lightgbm as lgb
 import pandas as pd
 from pathlib import Path
 import joblib
-# from typing import List, Iterator, Tuple
+from typing import List, Iterator, Tuple
 
 from potok.core import Regressor, ApplyToDataDict
 from potok.tabular.TabularData import TabularData
-# from potok.tabular.HyperOptimization import HrPrmOptRange, HrPrmOptChoise
 
 
 class LightGBM(Regressor):
@@ -16,7 +15,7 @@ class LightGBM(Regressor):
         features=None,
         cat_features=None,
         mode='Regressor',
-        model_params=dict(),
+        model_params=None,
         weight=None,
         **kwargs,
     ):
@@ -58,9 +57,8 @@ class LightGBM(Regressor):
             self.model = lgb.LGBMClassifier()
         else:
             raise Exception('Unknown mode %s' % self.mode)
-        # params = {k: (x.value if isinstance(x, (HrPrmOptRange, HrPrmOptChoise)) else x) for k, x in self.model_params.items()}
-        params = self.model_params
-        self.model.set_params(**params)
+        if self.model_params is not None:
+            self.model.set_params(**self.model_params)
 
     def _fit_(self, x: TabularData, y: TabularData) -> None:
         self._set_model_()
