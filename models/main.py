@@ -91,7 +91,7 @@ def prepare_train_test_df(train_df, test_df):
     test_df_idx = preprocess_df(test_df)
     test_df_index = test_df_idx.index
 
-    df_all = pd.concat([train_df, test_df])
+    df_all = pd.concat([train_df, test_df], axis=0)
     prep_df_all = preprocess_df(df_all)
     ft_df_all = create_features(prep_df_all)
 
@@ -138,17 +138,21 @@ def train_model(df_train, df_test):
 
     return prediction
 
+
 def post_process(prediction):
     df_pred = prediction.data_1.train.data
     df_labels = (df_pred[1] > 0.9)
     return prediction
 
 
-
 def main():
-    df = pd.read_csv('X_train.csv')
+    df = pd.read_csv('models/X_train.csv', parse_dates=['eventTime'])
     df_train = df[:100000]
     df_test = df[100000:]
     df_train_ft, df_test_ft = prepare_train_test_df(df_train, df_test)
     print(df_train.shape, df_test.shape)
     print(df_train_ft.shape, df_test_ft.shape)
+
+
+if __name__ == '__main__':
+    main()
