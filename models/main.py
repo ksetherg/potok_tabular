@@ -1,11 +1,10 @@
-from typing import List, Iterator, Tuple
 import pandas as pd
 import numpy as np
 
-from pathlib import Path
+
 from potok.core import DataDict, Pipeline
-from potok.tabular import Folder, LightGBM, TransformY, LinReg, SyntheticData, StratifiedFolder
-from potok.methods import Validation, Bagging
+from potok.tabular import LightGBM,  StratifiedFolder
+from potok.methods import Validation
 from potok.tabular.TabularData import TabularData
 from potok.tabular import EncodeX
 
@@ -58,27 +57,26 @@ def create_features(df):
     df['amount_std'] = df.groupby('cardToken').expanding(1)[['amount_rub']].std().droplevel(0)['amount_rub'].fillna(0)
     df['uniq_amount'] = df.groupby('cardToken').expanding()['amount'].apply(lambda x: len(np.unique(x))).droplevel(0)
 
-
     # фичи по количеству уникальных категориальных фичей
-    # df['uniq_paymentSystem'] = df.groupby('cardToken')['paymentSystem'].transform(
-    #     lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
-    # df['uniq_bankCountry'] = df.groupby('cardToken')['bankCountry'].transform(
-    #     lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
-    # df['uniq_partyId'] = df.groupby('cardToken')['partyId'].transform(
-    #     lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
-    # df['uniq_shopId'] = df.groupby('cardToken')['shopId'].transform(
-    #     lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
-    # df['uniq_currency'] = df.groupby('cardToken')['currency'].transform(
-    #     lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
-    # df['uniq_bin_hash'] = df.groupby('cardToken')['bin_hash'].transform(
-    #     lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
-    # df['uniq_ms_pan_hash'] = df.groupby('cardToken')['ms_pan_hash'].transform(
-    #     lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
-    # df['uniq_providerId'] = df.groupby('cardToken')['providerId'].transform(
-    #     lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
-    # df['uniq_email'] = df.groupby('cardToken')['email'].transform(
-    #     lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
-    # df['uniq_ip'] = df.groupby('cardToken')['ip'].transform(lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
+    df['uniq_paymentSystem'] = df.groupby('cardToken')['paymentSystem'].transform(
+        lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
+    df['uniq_bankCountry'] = df.groupby('cardToken')['bankCountry'].transform(
+        lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
+    df['uniq_partyId'] = df.groupby('cardToken')['partyId'].transform(
+        lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
+    df['uniq_shopId'] = df.groupby('cardToken')['shopId'].transform(
+        lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
+    df['uniq_currency'] = df.groupby('cardToken')['currency'].transform(
+        lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
+    df['uniq_bin_hash'] = df.groupby('cardToken')['bin_hash'].transform(
+        lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
+    df['uniq_ms_pan_hash'] = df.groupby('cardToken')['ms_pan_hash'].transform(
+        lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
+    df['uniq_providerId'] = df.groupby('cardToken')['providerId'].transform(
+        lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
+    df['uniq_email'] = df.groupby('cardToken')['email'].transform(
+        lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
+    df['uniq_ip'] = df.groupby('cardToken')['ip'].transform(lambda x: [len(set(x[:i + 1])) for i in range(len(x))])
 
     return df
 
@@ -100,15 +98,13 @@ def prepare_train_test_df(train_df, test_df):
     return train_df_orig, test_df_orig
 
 
-
-
 def train_model(df_train, df_test):
     num_ft = [
         'dt_diff', 'amount_rub', 'dt_diff_sum', 'dt_diff_mean', 'dt_diff_std',
-        'tx_count', 'tx_shop_count', 'amount_sum', 'amount_mean', 'amount_std',
-        # 'uniq_paymentSystem', 'uniq_bankCountry', 'uniq_partyId', 'uniq_shopId',
-        # 'uniq_currency', 'uniq_bin_hash', 'uniq_ms_pan_hash', 'uniq_providerId',
-        # 'uniq_email', 'uniq_ip',  'uniq_amount',
+        'tx_cardToken_count', 'tx_shopId_count', 'amount_sum', 'amount_mean', 'amount_std',
+        'uniq_paymentSystem', 'uniq_bankCountry', 'uniq_partyId', 'uniq_shopId',
+        'uniq_currency', 'uniq_bin_hash', 'uniq_ms_pan_hash', 'uniq_providerId',
+        'uniq_email', 'uniq_ip',  'uniq_amount',
     ]
     cat_ft = [
         'paymentSystem', 'bankCountry', 'currency',
@@ -116,9 +112,9 @@ def train_model(df_train, df_test):
     all_ft = num_ft + cat_ft
 
     train_data = TabularData(df_train, target=['target'])
-    # test_data = TabularData(df_test, target=['target'])
+    test_data = TabularData(df_test, target=['target'])
 
-    data = DataDict(train=train_data)
+    data = DataDict(train=train_data, test=test_data)
     x = DataDict(data_1=data.X)
     y = DataDict(data_1=data.Y)
 
@@ -140,18 +136,19 @@ def train_model(df_train, df_test):
 
 
 def post_process(prediction):
-    df_pred = prediction.data_1.train.data
+    df_pred = prediction.data_1.test.data
     df_labels = (df_pred[1] > 0.9)
-    return prediction
+    return df_labels
 
 
 def main():
-    df = pd.read_csv('models/X_train.csv', parse_dates=['eventTime'])
-    df_train = df[:100000]
-    df_test = df[100000:]
+    df_train = pd.read_csv('models/X_train.csv', parse_dates=['eventTime'])
+    df_test = pd.read_csv('models/X_test.csv', parse_dates=['eventTime'])
     df_train_ft, df_test_ft = prepare_train_test_df(df_train, df_test)
-    print(df_train.shape, df_test.shape)
-    print(df_train_ft.shape, df_test_ft.shape)
+    print(f"df train shape {df_train_ft.shape}, df test shape {df_test_ft.shape}")
+    prediction = train_model(df_train_ft, df_test_ft)
+    df_labels = post_process(prediction)
+    df_labels.to_csv('models/submission.csv')
 
 
 if __name__ == '__main__':
